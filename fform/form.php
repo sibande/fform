@@ -2,8 +2,8 @@
 /**
  * Forms library
  *
- * @package   fuuze.form
- * @author    Jose Sibande
+ * @package   fform
+ * @author    Jose Sibande <jbsibande@gmail.com>
  * @license   (c) 2010 JB Sibande GNU GPL 3.  
  */
 
@@ -13,6 +13,7 @@ class FForm_Form
   {
     $this->schema = $schema;
     $this->data = $this->filter_data($schema);
+    $this->widget = new FForm_Widgets($this);
   }
   
   /**
@@ -22,7 +23,7 @@ class FForm_Form
    * @param   array  default data
    * @return  array  default data + array(expected field => key)
    */
-  public static function filter_data($schema, $valid_data = array())
+  public function filter_data($schema, $valid_data = array())
   {
     foreach ($schema as $field=>$rules)
     {
