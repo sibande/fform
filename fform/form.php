@@ -27,15 +27,15 @@ class FForm_Form
   {
     foreach ($schema as $field=>$rules)
     {
-      $valid_data[$field]['value'] = array_key_exists($field, $_POST) ? $_POST[$field]: '';
-	  $valid_data[$field]['errors'] = array();
+      $valid_data[$field]['value'] = array_key_exists($field, $_POST) ?
+	$_POST[$field]: (array_key_exists($field, $_FILES) ? $_FILES[$field]: '');
+      $valid_data[$field]['errors'] = array();
     }
     return $valid_data;
   }
   
   /**
    * Validate form
-   * TODO: find PHP equivalent of Python's **kwargs
    *
    * @param   array  form schema
    * @return  array  validated data
@@ -85,8 +85,12 @@ class FForm_Form
    * @param   bool    pass empty keys
    * @return  bool
    */
-  public function regex($key, $pattern, $error,  $allow_empty=False)
+  public function regex($key, $pattern, $error=NULL,  $allow_empty=FALSE)
   {
+    if ( ! $error)
+    {
+      $error = 'Invalid input.';
+    }
     if ( ! preg_match($pattern, $this->data[$key]['value']))
     {
       $this->data[$key]['errors'][] = $error;
@@ -103,8 +107,12 @@ class FForm_Form
    * @return  bool
    */
   
-  public function required($key, $error)
+  public function required($key, $error=NULL)
   {
+    if ( ! $error)
+    {
+      $error = 'Required.';
+    }
     if ( ! (bool) $this->data[$key]['value'])
     {
       $this->data[$key]['errors'][] = $error;
@@ -121,8 +129,12 @@ class FForm_Form
    * @param   bool    pass empty keys
    * @return  bool
    */
-  public function email($key, $error, $allow_empty=False)
+  public function email($key, $error=NULL, $allow_empty=FALSE)
   {
+    if ( ! $error)
+    {
+      $error = 'Invalid E-Mail address.';
+    }
     // pattern stolen from kohana
     $pattern = '/^[-_a-z0-9\'+*$^&%=~!?{}]++(?:\.[-_a-z0-9\'+*$^&%=~!?{}]+)*+@(?:'.
       '(?![-.])[-a-z0-9.]+(?<![-.])\.[a-z]{2,6}|\d{1,3}(?:\.\d{1,3}){3})(?::\d++)?$/iD';
@@ -143,8 +155,12 @@ class FForm_Form
    * @param   bool    pass empty keys
    * @return  bool
    */
-  public function in($key, $range, $error, $allow_empty=False)
+  public function in($key, $range, $error=NULL, $allow_empty=FALSE)
   {
+    if ( ! $error)
+    {
+      $error = 'Value not in range.';
+    }
     if ( ! in_array($this->data[$key]['value'], $range))
     {
       $this->data[$key]['errors'][] = $error;
@@ -162,8 +178,12 @@ class FForm_Form
    * @param   bool    pass empty keys
    * @return  bool
    */
-  public function number($key, $range, $error, $allow_empty)
+  public function number($key, $range, $error=NULL, $allow_empty=NULL)
   {
+    if ( ! (bool) $error)
+    {
+      $error = 'Invalid number.';
+    }
     if ( ! is_numeric($this->data[$key]['value']))
     {
       $this->data[$key]['errors'][] = $error[0];
@@ -182,13 +202,17 @@ class FForm_Form
    * @param   bool    pass empty keys
    * @return  bool
    */
-  public function length($key, $range, $error, $allow_empty=False)
+  public function length($key, $range, $error=NULL, $allow_empty=FALSE)
   {
+    if ( ! (bool) $error)
+    {
+      $error = 'Field length must be between '.$range['min'].' and '.$range['max'].'.';
+    }
     if (isset($range['min']))
     {
       if (strlen($this->data[$key]['value']) < $range['min'])
       {
-	$this->data[$key]['errors'][] = $error['min'];
+	$this->data[$key]['errors'][] = $error;
 	return FALSE;
       }
     }
@@ -196,7 +220,7 @@ class FForm_Form
     {
       if (strlen($this->data[$key]['value']) > $range['max'])
       {
-	$this->data[$key]['errors'][] = $error['max'];
+	$this->data[$key]['errors'][] = $error;
 	return FALSE;
       }
     }
@@ -210,14 +234,48 @@ class FForm_Form
    * @param   string  other key name
    * @return  bool
    */
-  public function compare($key, $other_key, $error)
+  public function compare($key, $other_key, $error=NULL)
   {
+    if ( ! (bool) $error)
+    {
+      $error = 'Field not matching '.$other_key.'.';
+    }
     if ($this->data[$key]['value'] != $this->data[$other_key]['value'])
     {
       $this->data[$key]['errors'][] = $error;
       return FALSE;
     }
     return TRUE;
+  }
+
+  /**
+   * Validates file input
+   *
+   * @param   string  key name
+   * @param   array   file types
+   * @return  bool
+   */
+  public function file($key, $file_types, $error=NULL)
+  {
+    if ( ! (bool) $error)
+    {
+      $error = 'Unsupported file.';
+    }
+
+    if ( ! in_array('type', $this->data[$key]['value']))
+    {
+      $this->data[$key]['errors'][] = $error;
+      return FALSE;
+    }
+    elseif ( ! in_array($this->data[$key]['value']['type'], array_values($file_types)))
+    {
+      $this->data[$key]['errors'][] = $error;
+      return FALSE;
+    }
+    else
+    {
+      return TRUE;
+    }
   }
 
 }

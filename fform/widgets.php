@@ -18,7 +18,7 @@ function html_params($args=array())
   $params = '';
   foreach ($args as $key=>$value)
   {
-    $params .= ' '.$key.'="'.htmlspecialchars($value).'"';
+    $params .= ' '.$key.'="'.htmlspecialchars((string)$value).'"';
   }
   return trim($params);
 }
@@ -61,5 +61,27 @@ class FForm_Widgets
 
     return '<input '.html_params($args).' />';
   }
-
+  
+  /**
+   * Textarea widget
+   *
+   * @param   string  name
+   * @param   array   options
+   * @return  string  html textarea element
+   */
+  public function textarea($name, $args)
+  {
+    $value = array_key_exists($name, $this->that->data) ? $this->that->data[$name]['value'] : '';
+    $value = isset($args['value']) ? $args['value'] : $value;
+    $defaults = array('name'=>$name, 'id'=>$name);
+    
+    foreach ($defaults as $k=>$v)
+    {
+      if ( ! isset($args[$k]))
+      {
+	$args[$k] = $v;
+      }
+    }
+    return '<textarea '.html_params($args).'>'.$value.'</textarea>';
+  }
 }
